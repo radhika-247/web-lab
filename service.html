@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+</head>
+
+<body ng-app="myApp">
+
+    <div ng-controller="mycontroller">
+
+        <h2>Student Details</h2>
+
+        <table border="1">
+
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+            </tr>
+
+            <tr ng-repeat="student in students">
+
+                <td>{{student.name}}</td>
+                <td>{{student.department}}</td>
+
+            </tr>
+
+        </table>
+
+    </div>
+    <script>
+        var app = angular.module("myApp",[]);
+        app.service("Studentservice",function()
+    {
+            this.getstudents= function()
+            {
+                return [
+                   { name: "Arun", department: "IT"},
+                    {name: "Bala", department: "CSE"},
+                    {name: "Anu", department: "IT"},
+                    {name: "Priya", department: "ECE"}
+                ];
+            }
+    });
+    app.controller("mycontroller",function($scope,Studentservice)
+        {
+            $scope.students= Studentservice.getstudents();
+}       );
+    </script>
+        
+                
+
+</body>
+
+</html>

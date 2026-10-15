@@ -1,0 +1,11 @@
+app.factory("MyFactory", function() {
+
+    var obj = {};
+
+    obj.getData = function() {
+        return [...];
+    };
+
+    return obj;
+
+});

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html ng-app="myapp">
+    <head>
+        <title>Product Display</title>
+        <script src ="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js">    
+        </script>
+    </head>
+    <body ng-controller="mycontroller">
+        <h2>Product Display</h2>
+       <table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Quantity</th>
+    </tr>
+
+    <tr ng-repeat="x in products">
+
+        <td>{{x.id}}</td>
+        <td>{{x.name}}</td>
+        <td>{{x.category}}</td>
+        <td>{{x.quantity}}</td>
+
+    </tr>
+
+</table>
+    <script >
+        var app = angular.module("myapp",[]);
+        app.controller("mycontroller",function($scope){
+            $scope.products = [
+    {
+        id: 1,
+        name: "Rice",
+        category: "Food",
+        quantity: 10
+    },
+    {
+        id: 2,
+        name: "Soap",
+        category: "Personal Care",
+        quantity: 5
+    }
+];
+        });
+    </script>
+    </body>
+</html>
