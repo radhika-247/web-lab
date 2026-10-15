@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html ng-app="alumniApp">
+<head>
+    <title>Alumni Directory</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script
+
+</head>
+
+<body ng-controller="AlumniController">
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f5f9;
+    margin: 30px;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #2455a4;
+}
+
+h3 {
+    color: #2455a4;
+}
+
+form, .search {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+input, select {
+    padding: 10px;
+    margin: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 16px;
+    margin: 5px;
+    background: #2455a4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #163b78;
+}
+
+alumni-card {
+    display: block;
+    background: white;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+alumni-card img {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+}
+</style>
+
+
+<h1>Alumni Directory</h1>
+
+<h3>Add / Edit Alumni</h3>
+
+<form ng-submit="saveAlumni()">
+    <input ng-model="form.name" placeholder="Name" required>
+    <input ng-model="form.year" type="number" placeholder="Passing Year" required>
+    <input ng-model="form.company" placeholder="Company" required>
+    <input ng-model="form.designation" placeholder="Designation" required>
+    <input ng-model="form.email" type="email" placeholder="Email" required>
+    <input ng-model="form.photo" placeholder="Photo URL">
+
+    <button type="submit">
+        {{form._id ? 'Update Alumni' : 'Add Alumni'}}
+    </button>
+
+    <button type="button" ng-click="clearForm()">Clear</button>
+</form>
+
+<hr>
+
+<h3>Search and Filter</h3>
+
+<input ng-model="searchName" placeholder="Search by name">
+
+<select ng-model="selectedYear">
+    <option value="">All Passing Years</option>
+    <option ng-repeat="year in years" value="{{year}}">
+        {{year}}
+    </option>
+</select>
+
+<p>Total Alumni: {{filteredAlumni.length}}</p>
+
+<div ng-repeat="alumni in filteredAlumni = (records | filter:{name:searchName} | filter:yearFilter)">
+    <alumni-card alumni="alumni"></alumni-card>
+
+    <button ng-click="editAlumni(alumni)">Edit</button>
+    <button ng-click="deleteAlumni(alumni._id)">Delete</button>
+    <hr>
+</div>
+
+<script>
+var app = angular.module("alumniApp", []);
+
+// SERVICE
+app.service("AlumniService", function($http) {
+    this.getAll = function() {
+        return $http.get("/api/alumni");
+    };
+
+    this.add = function(data) {
+        return $http.post("/api/alumni", data);
+    };
+
+    this.update = function(id, data) {
+        return $http.put("/api/alumni/" + id, data);
+    };
+
+    this.delete = function(id) {
+        return $http.delete("/api/alumni/" + id);
+    };
+});
+
+// CUSTOM DIRECTIVE
+app.directive("alumniCard", function() {
+    return {
+        restrict: "E",
+        scope: { alumni: "=" },
+        template: '<div>' +
+            '<img ng-src="{{alumni.photo || \'https://placehold.co/100x100\'}}" width="100">' +
+            '<h3>{{alumni.name}}</h3>' +
+            '<p>Batch: {{alumni.year}}</p>' +
+            '<p>Company: {{alumni.company}}</p>' +
+            '<p>Designation: {{alumni.designation}}</p>' +
+            '<p>Email: {{alumni.email}}</p>' +
+            '</div>'
+    };
+});
+
+// CONTROLLER
+app.controller("AlumniController", function($scope, AlumniService) {
+    $scope.records = [];
+    $scope.form = {};
+    $scope.searchName = "";
+    $scope.selectedYear = "";
+
+    $scope.loadAlumni = function() {
+        AlumniService.getAll().then(function(response) {
+            $scope.records = response.data;
+
+            $scope.years = [];
+            angular.forEach($scope.records, function(a) {
+                if ($scope.years.indexOf(Number(a.year)) === -1) {
+                    $scope.years.push(Number(a.year));
+                }
+            });
+        });
+    };
+
+    $scope.yearFilter = function(alumni) {
+        return !$scope.selectedYear ||
+               Number(alumni.year) === Number($scope.selectedYear);
+    };
+
+    $scope.saveAlumni = function() {
+        if ($scope.form._id) {
+            AlumniService.update($scope.form._id, $scope.form)
+                .then(function() {
+                    $scope.clearForm();
+                    $scope.loadAlumni();
+                });
+        } else {
+            AlumniService.add($scope.form)
+                .then(function() {
+                    $scope.clearForm();
+                    $scope.loadAlumni();
+                });
+        }
+    };
+
+    $scope.editAlumni = function(alumni) {
+        $scope.form = angular.copy(alumni);
+    };
+
+    $scope.deleteAlumni = function(id) {
+        if (confirm("Delete this alumni?")) {
+            AlumniService.delete(id).then(function() {
+                $scope.loadAlumni();
+            });
+        }
+    };
+
+    $scope.clearForm = function() {
+        $scope.form = {};
+    };
+
+    $scope.loadAlumni();
+});
+</script>
+
+</body>
+</html>
