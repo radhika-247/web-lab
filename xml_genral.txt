@@ -1,0 +1,81 @@
+XMLLab/
+├── data.xml
+├── style.css
+└── style.xsl
+
+for style.css <?xml-stylesheet type="text/css" href="style.css"?>
+for xsl execution <?xml-stylesheet type="text/xsl" href="style.xsl"?>
+----------------------------------------------------------------------------
+data.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="style.css"?>
+
+<records>
+    <record>
+        <field1>Value 1</field1>
+        <field2>Value 2</field2>
+        <field3>Value 3</field3>
+    </record>
+    <record>
+        <field1>Value 4</field1>
+        <field2>Value 5</field2>
+        <field3>Value 6</field3>
+    </record>
+</records>
+---------------------------------------------------------------------------
+style.css
+
+
+records {
+    display: block;
+    font-family: Arial;
+    background-color: lightyellow;
+}
+
+record {
+    display: block;
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+field1, field2, field3 {
+    display: block;
+    margin: 5px;
+}
+---------------------------------------------------------------------------style.xsl
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:template match="/">
+<html>
+<body>
+<h2>Application Details</h2>
+
+<table border="1">
+<tr>
+<th>Field 1</th>
+<th>Field 2</th>
+<th>Field 3</th>
+</tr>
+
+<xsl:for-each select="records/record">
+<tr>
+<td><xsl:value-of select="field1"/></td>
+<td><xsl:value-of select="field2"/></td>
+<td><xsl:value-of select="field3"/></td>
+</tr>
+</xsl:for-each>
+
+</table>
+</body>
+</html>
+</xsl:template>
+
+</xsl:stylesheet>
+
+

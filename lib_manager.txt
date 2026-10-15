@@ -1,0 +1,147 @@
+index.html
+---------------------------------------------------------------------------
+<!DOCTYPE html>
+<html ng-app="myapp">
+<head>
+    <title>Library Management</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        input, select, button { padding: 8px; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 10px; text-align: left; }
+        th { background: lightblue; }
+    </style>
+</head>
+
+<body ng-controller="mycontroller">
+
+    <h2>Library Management System</h2>
+
+    <h3>Add Book</h3>
+    <input ng-model="book.title" placeholder="Book Title">
+    <input ng-model="book.author" placeholder="Author">
+
+    <select ng-model="book.category">
+        <option value="">Select Category</option>
+        <option>Programming</option>
+        <option>Database</option>
+        <option>Networking</option>
+        <option>Other</option>
+    </select>
+
+    <select ng-model="book.status">
+        <option value="Available">Available</option>
+        <option value="Issued">Issued</option>
+    </select>
+
+    <button ng-click="addBook()">Add Book</button>
+
+    <h3>Filter-Based Search</h3>
+
+    <input ng-model="searchText" placeholder="Search title or author">
+
+    <select ng-model="categoryFilter">
+        <option value="">All Categories</option>
+        <option>Programming</option>
+        <option>Database</option>
+        <option>Networking</option>
+        <option>Other</option>
+    </select>
+
+    <select ng-model="statusFilter">
+        <option value="">All Books</option>
+        <option>Available</option>
+        <option>Issued</option>
+    </select>
+
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th>Status</th>
+        </tr>
+
+        <tr ng-repeat="b in bookList |
+            filter:{category:categoryFilter, status:statusFilter} |
+            filter:searchText">
+
+            <td>{{b.title}}</td>
+            <td>{{b.author}}</td>
+            <td>{{b.category}}</td>
+            <td>{{b.status}}</td>
+        </tr>
+    </table>
+
+    <p>Total books displayed: {{(bookList |
+        filter:{category:categoryFilter, status:statusFilter} |
+        filter:searchText).length}}</p>
+
+    <script>
+        var app = angular.module("myapp", []);
+
+        app.controller("mycontroller", function($scope, $http) {
+            $scope.book = { status: "Available" };
+            $scope.bookList = [];
+
+            $scope.loadBooks = function() {
+                $http.get("/books").then(function(response) {
+                    $scope.bookList = response.data;
+                });
+            };
+
+            $scope.addBook = function() {
+                if (!$scope.book.title || !$scope.book.author ||
+                    !$scope.book.category || !$scope.book.status) {
+                    alert("Please fill all fields");
+                    return;
+                }
+
+                $http.post("/books", $scope.book).then(function() {
+                    alert("Book added successfully");
+                    $scope.book = { status: "Available" };
+                    $scope.loadBooks();
+                });
+            };
+
+            $scope.loadBooks();
+        });
+    </script>
+
+</body>
+</html>
+-------------------------------------------------------------------------
+server.js
+
+const express = require("express");
+const { MongoClient } = require("mongodb");
+
+const app = express();
+app.use(express.json());
+app.use(express.static("public"));
+
+const uri = "mongodb+srv://radhika:student12345@cluster1.0ohwm8h.mongodb.net/?appName=Cluster1";
+const client = new MongoClient(uri);
+
+async function start() {
+    await client.connect();
+    const db = client.db("LibraryDB");
+    const books = db.collection("books");
+
+    app.get("/books", async (req, res) => {
+        res.json(await books.find().toArray());
+    });
+
+    app.post("/books", async (req, res) => {
+        await books.insertOne(req.body);
+        res.json({ message: "Book added successfully" });
+    });
+
+    app.listen(3000, () =>
+        console.log("Server running at http://localhost:3000")
+    );
+}
+
+start().catch(console.error);

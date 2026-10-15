@@ -1,0 +1,538 @@
+ANGULARJS WEB TECHNOLOGIES LAB - QUICK REFERENCE
+=================================================
+
+Purpose:
+--------
+This file contains beginner-friendly AngularJS 1.x examples for:
+- Built-in filters
+- Modules
+- Controllers and $scope
+- Services
+- Factories
+- Custom directives
+- Conditional styling
+- ngAnimate
+- How to adapt the patterns to a new application
+
+IMPORTANT:
+- These examples are small patterns. Combine them into one application when needed.
+- Use only the concepts required by the question.
+- The examples use AngularJS 1.x, matching common lab syllabi.
+- AngularJS is end-of-life, but use it if your lab question specifically requires it.
+- Include angular.min.js before your application JavaScript.
+- If using ngAnimate, include angular-animate.min.js too.
+
+--------------------------------------------------
+1. BASIC HTML AND MODULE
+--------------------------------------------------
+
+HTML:
+<html ng-app="myapp">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="mycontroller">
+    <p>{{message}}</p>
+
+    <script>
+        // Create the AngularJS module.
+        var app = angular.module("myapp", []);
+
+        // Create the controller and a value to display.
+        app.controller("mycontroller", function($scope) {
+            $scope.message = "Hello AngularJS";
+        });
+    </script>
+</body>
+</html>
+
+What to change for a new application:
+- ng-app="myapp": Usually keep this name.
+- ng-controller="mycontroller": Usually keep this name.
+- angular.module("myapp", []): Keep the name consistent with ng-app.
+- Change "Hello AngularJS" to a message related to your application.
+- Add the HTML form and table required by the question.
+
+--------------------------------------------------
+2. BUILT-IN FILTERS
+--------------------------------------------------
+
+Filters format displayed values or filter lists.
+
+A) UPPERCASE
+HTML:
+<p>{{name | uppercase}}</p>
+Use for: Display a name in uppercase.
+
+B) LOWERCASE
+HTML:
+<p>{{name | lowercase}}</p>
+Use for: Display text in lowercase.
+
+C) CURRENCY
+HTML:
+<p>{{salary | currency:'₹'}}</p>
+Use for: Display a number as currency.
+
+D) NUMBER
+HTML:
+<p>{{salary | number:2}}</p>
+Use for: Display a number with two decimal places.
+
+E) DATE
+HTML:
+<p>{{today | date:'dd-MM-yyyy'}}</p>
+Use for: Format a date.
+
+F) FILTER / SEARCH
+HTML:
+Search: <input ng-model="searchText">
+<tr ng-repeat="e in employees | filter:searchText">
+    <td>{{e.name}}</td>
+</tr>
+Use for: Search rows using the text entered by the user.
+
+G) FILTER BY A PARTICULAR FIELD
+HTML:
+<select ng-model="filterStatus">
+    <option value="">All statuses</option>
+    <option>Approved</option>
+    <option>Pending</option>
+    <option>Rejected</option>
+</select>
+
+<tr ng-repeat="e in employees | filter:{status:filterStatus}">
+    <td>{{e.name}}</td>
+    <td>{{e.status}}</td>
+</tr>
+Use for: Show only records matching the selected status.
+Note: An empty filterStatus displays all statuses.
+
+H) ORDERBY
+HTML:
+<tr ng-repeat="e in employees | orderBy:'name'">
+    <td>{{e.name}}</td>
+</tr>
+Use for: Sort by name in ascending order.
+Descending order:
+<tr ng-repeat="e in employees | orderBy:'-name'">
+
+I) LIMITTO
+HTML:
+<li ng-repeat="n in names | limitTo:3">{{n}}</li>
+Use for: Display only the first three items.
+
+J) JSON
+HTML:
+<pre>{{employee | json}}</pre>
+Use for: Display an object as JSON, useful for debugging.
+
+K) CHAINING FILTERS
+HTML:
+<tr ng-repeat="e in employees | filter:searchText | orderBy:'name'">
+    <td>{{e.name | uppercase}}</td>
+</tr>
+Meaning: Filter/search records, sort by name, and display the name in uppercase.
+
+--------------------------------------------------
+3. CONTROLLER AND $SCOPE
+--------------------------------------------------
+
+JavaScript:
+app.controller("mycontroller", function($scope) {
+    // Values used by the HTML.
+    $scope.name = "";
+    $scope.message = "Ready";
+
+    // Function called by a button or form.
+    $scope.showMessage = function() {
+        $scope.message = "Hello " + $scope.name;
+    };
+});
+
+HTML:
+<div ng-controller="mycontroller">
+    <input ng-model="name" placeholder="Enter name">
+    <button ng-click="showMessage()">Show</button>
+    <p>{{message}}</p>
+</div>
+
+What to change:
+- Change the fields and function according to the application.
+- Use ng-model="name" to collect the user's name.
+- Use ng-click="functionName()" to call a function.
+- Use ng-submit="functionName()" on a form to submit it.
+
+--------------------------------------------------
+4. SERVICE
+--------------------------------------------------
+
+JavaScript:
+app.service("myservice", function() {
+    // A service stores reusable functions.
+    this.getMessage = function() {
+        return "Operation successful";
+    };
+});
+
+Use it in a controller:
+app.controller("mycontroller", function($scope, myservice) {
+    $scope.message = myservice.getMessage();
+});
+
+HTML:
+<p>{{message}}</p>
+
+For a backend application, a service commonly uses $http:
+app.service("myservice", function($http) {
+    this.getItems = function() {
+        return $http.get("/items");
+    };
+
+    this.addItem = function(item) {
+        return $http.post("/items", item);
+    };
+});
+
+What to change for a new application:
+- Rename "/items" to the API route used by your server, e.g. "/employees", "/books", "/jobs".
+- Change getItems/addItem names if desired, and update every place where they are called.
+- The route must exist in server.js for database-backed applications.
+
+--------------------------------------------------
+5. FACTORY
+--------------------------------------------------
+
+JavaScript:
+app.factory("myfactory", function() {
+    // A factory returns an object with reusable functions.
+    return {
+        getMessage: function() {
+            return "Saved successfully";
+        }
+    };
+});
+
+Use it in a controller:
+app.controller("mycontroller", function($scope, myfactory) {
+    $scope.message = myfactory.getMessage();
+});
+
+HTML:
+<p>{{message}}</p>
+
+Difference:
+- Service: commonly defines methods using this.
+- Factory: returns an object.
+- Both provide reusable functionality.
+
+What to change:
+- Change the message to fit the application, e.g. "Leave added successfully".
+- If you rename "myfactory", update the controller dependency too.
+
+--------------------------------------------------
+6. CUSTOM DIRECTIVE
+--------------------------------------------------
+
+A directive defines reusable HTML behavior or a custom HTML element.
+
+JavaScript:
+app.directive("myDirective", function() {
+    return {
+        restrict: "E", // E means use it as an HTML element.
+        template: "<b>Hello from my directive!</b>"
+    };
+});
+
+HTML:
+<my-directive></my-directive>
+
+Name conversion:
+- JavaScript: myDirective (camelCase)
+- HTML: my-directive (kebab-case)
+
+CUSTOM DIRECTIVE WITH A VALUE:
+JavaScript:
+app.directive("showStatus", function() {
+    return {
+        restrict: "E",
+        scope: { status: "=" }, // Pass the parent value into the directive.
+        template: "<span>{{status}}</span>"
+    };
+});
+
+HTML:
+<show-status status="e.status"></show-status>
+
+What to change:
+- Rename showStatus if needed, and use matching <show-status> HTML.
+- Change status="e.status" to the field in your current record, e.g. b.available or a.result.
+- Change the directive template to display the requested information.
+
+--------------------------------------------------
+7. CONDITIONAL STYLING WITH ng-class
+--------------------------------------------------
+
+Example: Approved is green; all other statuses are red.
+
+CSS:
+.approved { color: green; font-weight: bold; }
+.notapproved { color: red; font-weight: bold; }
+
+HTML:
+<leave-status status="e.status"></leave-status>
+
+JavaScript:
+app.directive("leaveStatus", function() {
+    return {
+        restrict: "E",
+        scope: { status: "=" },
+        template: '<span ng-class="status == \'Approved\' ? \'approved\' : \'notapproved\'">{{status}}</span>'
+    };
+});
+
+Explanation:
+- status is passed into the directive.
+- If status equals "Approved", ng-class selects "approved".
+- Otherwise, it selects "notapproved".
+- CSS controls the color.
+
+If the question says Approved must be RED and other statuses GREEN, use:
+.approved { color: red; font-weight: bold; }
+.notapproved { color: green; font-weight: bold; }
+
+What to change for a new application:
+- Replace "Approved" with the exact status/value named in the question.
+- Change CSS colors to match the question exactly.
+- Change e.status to the actual field, e.g. book.status, employee.result, product.availability.
+- Keep the directive HTML name and JavaScript directive name consistent.
+
+--------------------------------------------------
+8. ngANIMATE
+--------------------------------------------------
+
+HTML libraries:
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+
+Module:
+var app = angular.module("myapp", ["ngAnimate"]);
+
+HTML:
+<div ng-controller="mycontroller">
+    <button ng-click="show = !show">Show / Hide</button>
+    <p ng-if="show" class="fade">Hello AngularJS!</p>
+</div>
+
+Controller:
+app.controller("mycontroller", function($scope) {
+    $scope.show = true;
+});
+
+CSS:
+.fade.ng-enter {
+    transition: 0.5s;
+    opacity: 0;
+}
+.fade.ng-enter-active {
+    opacity: 1;
+}
+.fade.ng-leave {
+    transition: 0.5s;
+    opacity: 1;
+}
+.fade.ng-leave-active {
+    opacity: 0;
+}
+
+Explanation:
+- ngAnimate must be included in the module dependency array.
+- ng-if adds/removes the paragraph.
+- AngularJS adds animation classes during enter/leave.
+- CSS defines the fade transition.
+- Include both libraries; the animate library alone is not enough.
+
+--------------------------------------------------
+9. COMPLETE SIMPLE STARTER STRUCTURE
+--------------------------------------------------
+
+Use this structure as the base for an AngularJS-only demo:
+
+<!DOCTYPE html>
+<html ng-app="myapp">
+<head>
+    <title>My Application</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body { font-family: Arial; margin: 25px; }
+        input, select, button { padding: 7px; margin: 5px; }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; }
+    </style>
+</head>
+<body ng-controller="mycontroller">
+
+    <h2>My Application</h2>
+
+    <!-- Change these fields to match the question. -->
+    <form ng-submit="addItem()">
+        Name: <input ng-model="name" required>
+        <button type="submit">Add</button>
+    </form>
+
+    Search: <input ng-model="searchText">
+
+    <table>
+        <tr><th>Name</th></tr>
+        <tr ng-repeat="e in items | filter:searchText">
+            <td>{{e.name | uppercase}}</td>
+        </tr>
+    </table>
+
+    <p>{{message}}</p>
+
+    <script>
+        // Module
+        var app = angular.module("myapp", []);
+
+        // Service
+        app.service("myservice", function() {
+            this.getItems = function() {
+                return [];
+            };
+        });
+
+        // Factory
+        app.factory("myfactory", function() {
+            return {
+                getMessage: function() {
+                    return "Item added successfully";
+                }
+            };
+        });
+
+        // Controller
+        app.controller("mycontroller", function($scope, myservice, myfactory) {
+            $scope.items = myservice.getItems();
+
+            $scope.addItem = function() {
+                $scope.items.push({name: $scope.name});
+                $scope.message = myfactory.getMessage();
+                $scope.name = "";
+            };
+        });
+
+        // Custom directive
+        app.directive("myDirective", function() {
+            return {
+                restrict: "E",
+                template: "<b>Custom directive</b>"
+            };
+        });
+    </script>
+</body>
+</html>
+
+Important:
+- This starter stores items in memory only. It does not connect to a server or database.
+- Add server.js, Express routes, and an HTTP service only if the question requires a backend/database.
+- Add ngAnimate only if the question asks for animation.
+- Add fields and table columns according to the question.
+
+--------------------------------------------------
+10. HOW TO ADAPT THIS FOR A NEW APPLICATION
+--------------------------------------------------
+
+Follow these steps every time you receive a new question.
+
+STEP 1: Identify the application and its fields.
+Examples:
+- Employee Leave Management: name, department, leaveType, status
+- Student Management: name, rollNo, department, grade
+- Library Management: title, author, category, availability
+- Job Portal: name, role, salary
+- Event Registration: name, eventName, date, status
+
+STEP 2: Change the title and heading.
+Change:
+<title>My Application</title>
+<h2>My Application</h2>
+to the application name in the question.
+
+STEP 3: Change the form fields.
+Replace Name with the required fields.
+Use:
+- input type="text" for names/text
+- input type="number" for numeric values
+- input type="date" for dates
+- select for fixed choices such as status or category
+
+Give each field a matching ng-model:
+<input ng-model="name">
+<input ng-model="department">
+<select ng-model="status">...</select>
+
+STEP 4: Change the JavaScript object.
+The field names in the object must match the HTML models:
+var item = {
+    name: $scope.name,
+    department: $scope.department,
+    status: $scope.status
+};
+
+Change these properties to match the question.
+
+STEP 5: Change the table columns.
+Update the table headings and row values:
+<th>Name</th>
+<th>Department</th>
+<th>Status</th>
+
+<tr ng-repeat="e in items">
+    <td>{{e.name}}</td>
+    <td>{{e.department}}</td>
+    <td>{{e.status}}</td>
+</tr>
+
+STEP 6: Add the requested filters.
+- Search: filter:searchText
+- Filter by field: filter:{status:filterStatus}
+- Sort: orderBy:'name'
+- Uppercase: {{e.name | uppercase}}
+- Currency: {{e.salary | currency:'₹'}}
+
+STEP 7: Add a directive if requested.
+Use a custom directive when the question says to display a special status, result, label, or behavior. Change the directive's input field and template according to the question.
+
+STEP 8: Add service and factory.
+- Service: reusable operations or HTTP calls.
+- Factory: reusable messages or helper functions.
+If the question explicitly requests them, include both.
+
+STEP 9: Add backend/database only if required.
+If the question requires Node.js, Express, or MongoDB:
+- Create server.js.
+- Install required packages.
+- Add matching API routes.
+- Use $http in the AngularJS service.
+- Ensure the frontend route and backend route match.
+
+STEP 10: Test the result.
+- Save all files.
+- Run the required server command.
+- Open the page in the browser.
+- Add a record.
+- Test the search/filter.
+- Check the directive or color behavior.
+
+--------------------------------------------------
+11. EXAM REMINDER
+--------------------------------------------------
+
+Do not blindly copy every feature into every answer. Follow the exact question.
+- If it asks only for AngularJS frontend, do not add Node.js/MongoDB unnecessarily.
+- If it asks for a database, include backend connectivity.
+- If it asks for a custom directive, demonstrate the directive in the HTML.
+- If it asks for a filter, use it visibly in the HTML.
+- If it asks for animation, include ngAnimate and CSS transitions.
+- If it specifies a particular color, follow that color exactly.

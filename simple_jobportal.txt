@@ -1,0 +1,303 @@
+simple/
+├── server.js
+└── public/
+    └── index.html
+
+npm install express mongodb
+node server.js
+
+index.html
+
+
+<!DOCTYPE html>
+<html ng-app="myapp">
+<head>
+    <title>Job Portal Application</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 30px;
+            background-color: #f2f2f2;
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        form {
+            background: white;
+            padding: 15px;
+            width: 350px;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: steelblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            background: white;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: steelblue;
+            color: white;
+        }
+
+        .ng-enter {
+            transition: 0.3s;
+            opacity: 0;
+        }
+
+        .ng-enter-active {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body ng-controller="mycontroller">
+
+    <h2>Job Portal Application</h2>
+
+    <form ng-submit="addelement()">
+        Name:
+        <input type="text" ng-model="name" required>
+        <br><br>
+
+        
+        Job Role:
+<select ng-model="role" required>
+    <option value="">Select Role</option>
+    <option value="Developer">Developer</option>
+    <option value="Designer">Designer</option>
+    <option value="Tester">Tester</option>
+    <option value="Manager">Manager</option>
+</select>
+<br><br>
+
+        Salary:
+        <input type="number" ng-model="salary" required>
+        <br><br>
+
+        <button type="submit">Add Element</button>
+    </form>
+
+    <h3>Element Details</h3>
+
+    Search:
+    <input type="text" ng-model="searchText" placeholder="Search elements">
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Job Role</th>
+            <th>Salary</th>
+            <th>Result</th>
+            <th>Action</th>
+        </tr>
+
+        <tr ng-repeat="s in elements | filter:searchText">
+            <td>{{s.name | uppercase}}</td>
+            <td>{{s.role}}</td>
+            <td>{{s.salary}}</td>
+            <td>
+                <job-result salary="s.salary"></job-result>
+            </td>
+            <td>
+                <button ng-click="deleteelement(s._id)">Delete</button>
+            </td>
+        </tr>
+    </table>
+
+    <h3>Average Salary: {{average | number:2}}</h3>
+    <p>{{message}}</p>
+
+    <script>
+        var app = angular.module("myapp", ["ngAnimate"]);
+
+        // SERVICE
+        app.service("myservice", function($http) {
+            this.getelements = function() {
+                return $http.get("/elements");
+            };
+
+            this.addelement = function(element) {
+                return $http.post("/elements", element);
+            };
+
+            this.deleteelement = function(id) {
+                return $http.delete("/elements/" + id);
+            };
+
+            this.getaverage = function() {
+                return $http.get("/average");
+            };
+        });
+
+        // FACTORY
+        app.factory("myfactory", function() {
+            return {
+                getmessage: function() {
+                    return "Operation completed successfully";
+                }
+            };
+        });
+
+        // CONTROLLER
+        app.controller("mycontroller",
+            function($scope, myservice, myfactory) {
+
+                $scope.elements = [];
+                $scope.average = 0;
+                $scope.message = "";
+
+                $scope.loadelements = function() {
+                    myservice.getelements().then(function(response) {
+                        $scope.elements = response.data;
+                    });
+                };
+
+                $scope.getaverage = function() {
+                    myservice.getaverage().then(function(response) {
+                        $scope.average = response.data.average;
+                    });
+                };
+
+                $scope.addelement = function() {
+                    var element = {
+                        name: $scope.name,
+                        role: $scope.role,
+                        salary: Number($scope.salary)
+                    };
+
+                    myservice.addelement(element).then(function() {
+                        $scope.name = "";
+                        $scope.role = "";
+                        $scope.salary = "";
+
+                        $scope.message = myfactory.getmessage();
+
+                        $scope.loadelements();
+                        $scope.getaverage();
+                    });
+                };
+
+                $scope.deleteelement = function(id) {
+                    myservice.deleteelement(id).then(function() {
+                        $scope.message = myfactory.getmessage();
+
+                        $scope.loadelements();
+                        $scope.getaverage();
+                    });
+                };
+
+                $scope.loadelements();
+                $scope.getaverage();
+            }
+        );
+
+        // CUSTOM DIRECTIVE
+        app.directive("jobResult", function() {
+            return {
+                restrict: "E",
+                scope: {
+                    salary: "="
+                },
+                template:
+                    "{{salary >= 40000 ? 'Experienced' : 'Fresher'}}"
+            };
+        });
+    </script>
+
+</body>
+</html>
+
+const MONGO_URI = "mongodb+srv://radhika:student12345@cluster1.0ohwm8h.mongodb.net/?appName=Cluster1";
+
+server.js
+
+
+const express = require("express");
+const { MongoClient, ObjectId } = require("mongodb");
+
+const app = express();
+
+app.use(express.json());
+app.use(express.static("public"));
+
+const MONGO_URI = "mongodb+srv://radhika:student12345@cluster1.0ohwm8h.mongodb.net/?appName=Cluster1";
+
+async function startServer() {
+    const client = new MongoClient(MONGO_URI);
+    await client.connect();
+
+    console.log("MongoDB connected");
+
+    const db = client.db("mydb");
+    const collection = db.collection("mycollection");
+
+    // Display all elements
+    app.get("/elements", async (req, res) => {
+        const data = await collection.find().toArray();
+        res.json(data);
+    });
+
+    // Add an element
+    app.post("/elements", async (req, res) => {
+        await collection.insertOne(req.body);
+        res.json({ message: "Element added" });
+    });
+
+    // Delete an element
+    app.delete("/elements/:id", async (req, res) => {
+        await collection.deleteOne({
+            _id: new ObjectId(req.params.id)
+        });
+        res.json({ message: "Element deleted" });
+    });
+
+    // Calculate average salary
+    app.get("/average", async (req, res) => {
+        const result = await collection.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    average: { $avg: "$salary" }
+                }
+            }
+        ]).toArray();
+
+        res.json({
+            average: result.length ? result[0].average : 0
+        });
+    });
+
+    app.listen(3000, () => {
+        console.log("Server running at http://localhost:3000");
+    });
+}
+
+startServer().catch(console.error);

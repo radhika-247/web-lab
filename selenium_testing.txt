@@ -1,0 +1,90 @@
+-python -m pip install selenium
+If Python is missing, install it
+1. Open the official website: Download Python
+2. Download the latest stable Python 3 release.
+3. Run the installer.
+4. Tick “Add python.exe to PATH” before clicking Install.
+5. Reopen the terminal.
+--------------------------------------------------------------------------
+index.html
+---------------------------------------------------------------------------
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+</head>
+<body>
+    <h2>Login Form</h2>
+
+    <form action="/login" method="POST">
+        <label>Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br><br>
+
+        <label>Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br><br>
+
+        <button type="submit" id="loginBtn">Login</button>
+    </form>
+</body>
+</html>
+
+---------------------------------------------------------------------------
+server.js
+
+const express = require("express");
+const app = express();
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+
+app.post("/login", (req, res) => {
+    const { username, password } = req.body;
+
+    if (username === "admin" && password === "1234") {
+        res.send("<h2 id='result'>Login Successful</h2>");
+    } else {
+        res.send("<h2 id='result'>Invalid username or password</h2>");
+    }
+});
+
+app.listen(3000, () => console.log("Server running on port 3000"));
+
+---------------------------------------------------------------------------
+
+test_python.py
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+driver = webdriver.Chrome()
+
+try:
+    driver.get("http://localhost:3000")
+
+    # You enter the login details manually
+    input("Enter username and password in Chrome, then press Enter here...")
+
+    # Click Login
+    driver.find_element(By.ID, "loginBtn").click()
+
+    # Check the result
+    result = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "result"))
+    )
+
+    print("Login result:", result.text)
+
+    if result.text == "Login Successful":
+        print("Test Passed")
+    else:
+        print("Invalid login test verified")
+
+    input("Press Enter to close the browser...")
+
+finally:
+    driver.quit()

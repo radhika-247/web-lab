@@ -1,0 +1,195 @@
+index.html
+
+
+<!DOCTYPE html>
+<html ng-app="myapp">
+<head>
+    <title>Employee Leave Management</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        body { font-family: Arial; margin: 25px; }
+        input, select, button { padding: 7px; margin: 5px; }
+        table { border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid black; padding: 10px; }
+        th { background: lightgray; }
+
+        .approved { color: green; font-weight: bold; }
+        .notapproved { color: red; font-weight: bold; }
+    </style>
+</head>
+
+<body ng-controller="mycontroller">
+
+    <h2>Employee Leave Management</h2>
+
+    <!-- Employee Form -->
+    <form ng-submit="addEmployee()">
+        Employee Name:
+        <input type="text" ng-model="name" required>
+
+        Department:
+        <input type="text" ng-model="department" required>
+
+        Leave Type:
+        <select ng-model="type" required>
+            <option value="">Select Leave</option>
+            <option>Sick Leave</option>
+            <option>Casual Leave</option>
+            <option>Earned Leave</option>
+        </select>
+
+        Leave Status:
+        <select ng-model="status" required>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+        </select>
+
+        <button type="submit">Add Employee</button>
+    </form>
+
+    <!-- Search and Filter -->
+    <h3>Employee Leave Details</h3>
+
+    Search:
+    <input type="text" ng-model="searchText">
+
+    Filter by Status:
+    <select ng-model="filterStatus">
+        <option value="">All Statuses</option>
+        <option>Approved</option>
+        <option>Pending</option>
+        <option>Rejected</option>
+    </select>
+
+    <!-- Employee Table -->
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Leave Type</th>
+            <th>Status</th>
+        </tr>
+
+        <tr ng-repeat="e in employees | filter:searchText | filter:{status:filterStatus}">
+            <td>{{e.name | uppercase}}</td>
+            <td>{{e.department}}</td>
+            <td>{{e.type}}</td>
+            <td>
+                <leave-status status="e.status"></leave-status>
+            </td>
+        </tr>
+    </table>
+
+    <p>{{message}}</p>
+
+    <script>
+        // MODULE
+        var app = angular.module("myapp", []);
+
+        // SERVICE
+        app.service("myservice", function($http) {
+            this.getEmployees = function() {
+                return $http.get("/employees");
+            };
+
+            this.addEmployee = function(employee) {
+                return $http.post("/employees", employee);
+            };
+        });
+
+        // FACTORY
+        app.factory("myfactory", function() {
+            return {
+                message: function() {
+                    return "Employee added successfully";
+                }
+            };
+        });
+
+        // CONTROLLER
+        app.controller("mycontroller", function($scope, myservice, myfactory) {
+            $scope.employees = [];
+
+            function loadEmployees() {
+                myservice.getEmployees().then(function(response) {
+                    $scope.employees = response.data;
+                });
+            }
+
+            $scope.addEmployee = function() {
+                var employee = {
+                    name: $scope.name,
+                    department: $scope.department,
+                    type: $scope.type,
+                    status: $scope.status
+                };
+
+                myservice.addEmployee(employee).then(function() {
+                    $scope.message = myfactory.message();
+
+                    $scope.name = "";
+                    $scope.department = "";
+                    $scope.type = "";
+                    $scope.status = "";
+
+                    loadEmployees();
+                });
+            };
+
+            loadEmployees();
+        });
+
+        // CUSTOM DIRECTIVE
+        app.directive("leaveStatus", function() {
+            return {
+                restrict: "E",
+                scope: { status: "=" },
+                template: '<span ng-class="status == \'Approved\' ? \'approved\' : \'notapproved\'">{{status}}</span>'
+            };
+        });
+    </script>
+
+</body>
+</html>
+
+
+server.js
+
+
+
+const express = require("express");
+const { MongoClient } = require("mongodb");
+
+const app = express();
+app.use(express.json());
+app.use(express.static("public"));
+
+const MONGO_URI = "mongodb+srv://radhika:student12345@cluster1.0ohwm8h.mongodb.net/?appName=Cluster1";
+
+async function start() {
+    const client = new MongoClient(MONGO_URI);
+    await client.connect();
+
+    const db = client.db("LeaveDB");
+    const collection = db.collection("employees");
+
+    // GET: Display employees
+    app.get("/employees", async (req, res) => {
+        res.json(await collection.find().toArray());
+    });
+
+    // POST: Add employee
+    app.post("/employees", async (req, res) => {
+        await collection.insertOne(req.body);
+        res.json({ message: "Employee added" });
+    });
+
+    app.listen(3000, () => {
+        console.log("Server running at http://localhost:3000");
+    });
+}
+
+start().catch(console.error);
